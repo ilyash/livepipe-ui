@@ -16,6 +16,7 @@ if(typeof(Object.Event) == "undefined")
 
 Control.ScrollBar = Class.create({
     initialize: function(container,track,options){
+        Control.ScrollBar.instances.push(this);
         this.enabled = false;
         this.notificationTimeout = false;
         this.container = $(container);
@@ -142,6 +143,18 @@ Control.ScrollBar = Class.create({
         if(!this.enabled)
             return false;
         this.slider.setValueBy(y / this.getCurrentMaximumDelta());
+    }
+});
+Object.extend(Control.ScrollBar,
+{
+    instances: [],
+
+    findByElementId: function(id)
+    {
+        return Control.ScrollBar.instances.find(function(instance)
+        {
+            return (instance.container.id && instance.container.id == id);
+        });
     }
 });
 Object.Event.extend(Control.ScrollBar);
