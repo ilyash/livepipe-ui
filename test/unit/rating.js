@@ -8,5 +8,5 @@ test("Basic requirements", function () {
 test("options", function () {
     expect(1);
     var r = new Control.Rating("rating", { input: "rating-select" });
-    equals(1, r.value, "a rating populated with setValueFromOption should use the contents of the option if no explicit value is set");
+    equals(r.value, 1, "a rating populated with setValueFromOption should use the contents of the option if no explicit value is set");
 });
