@@ -57,6 +57,8 @@ Control.ScrollBar = Class.create({
     },
     destroy: function(){
         Event.stopObserving(window,'resize',this.boundResizeObserver);
+        if(this.options.active_class_name)
+            $(this.options.apply_active_class_name_to).removeClassName(this.options.active_class_name);
         if (this.options.custom_event) {
             this.container.stopObserving(this.options.custom_event);
         }
