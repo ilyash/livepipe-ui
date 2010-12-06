@@ -32,6 +32,8 @@ Control.ScrollBar = Class.create({
             scroll_to_smoothing: 0.01,
             scroll_to_steps: 15,
             proportional: true,
+            custom_event: null,
+            custom_event_handler: null,
             slider_options: {}
         },options || {});
         this.slider = new Control.Slider(this.handle,this.track,Object.extend({
@@ -41,6 +43,13 @@ Control.ScrollBar = Class.create({
         },this.options.slider_options));
         this.recalculateLayout();
         Event.observe(window,'resize',this.boundResizeObserver);
+        if (this.options.custom_event) {
+            if (Object.isFunction(this.options.custom_event_handler)) {
+                this.container.observe(this.options.custom_event, this.options.custom_event_handler);
+            } else {
+                this.container.observe(this.options.custom_event, this.boundResizeObserver);
+            }
+        }
         this.handle.observe('mousedown',function(){
             if(this.auto_sliding_executer)
                 this.auto_sliding_executer.stop();
@@ -48,6 +57,9 @@ Control.ScrollBar = Class.create({
     },
     destroy: function(){
         Event.stopObserving(window,'resize',this.boundResizeObserver);
+        if (this.options.custom_event) {
+            this.container.stopObserving(this.options.custom_event);
+        }
     },
     enable: function(){
         this.enabled = true;
