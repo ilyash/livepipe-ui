@@ -156,7 +156,7 @@ Control.ScrollBar = Class.create({
     scrollBy: function(y){
         if(!this.enabled)
             return false;
-        this.slider.setValueBy(y / this.getCurrentMaximumDelta());
+        this.slider.setValueBy(y / (this.getCurrentMaximumDelta() == 0 ? 1 : this.getCurrentMaximumDelta()) );
     }
 });
 Object.extend(Control.ScrollBar,
