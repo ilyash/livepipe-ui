@@ -83,8 +83,9 @@ Object.Event = {
                 try{
                     if(this.options && this.options[event_name] && typeof(this.options[event_name]) == 'function')
                         collected_return_values.push(this.options[event_name].apply(this,args) || null);
-                    for(var i = 0; i < this._observers[event_name].length; ++i)
-                        collected_return_values.push(this._observers[event_name][i].apply(this._observers[event_name][i],args) || null);
+                    var callbacks_copy = this._observers[event_name]; // since original array will be modified after observeOnce calls
+                    for(var i = 0; i < callbacks_copy.length; ++i)
+                        collected_return_values.push(callbacks_copy[i].apply(callbacks_copy[i],args) || null);
                 }catch(e){
                     if(e == $break)
                         return false;
