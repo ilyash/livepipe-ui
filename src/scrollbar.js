@@ -106,6 +106,7 @@ Control.ScrollBar = Class.create({
                 else
                     this.handle.style.width = this.slider.handleLength + 'px';
             }
+            this.scrollBy(0);
         }
     },
     onWindowResize: function(){
@@ -134,11 +135,24 @@ Control.ScrollBar = Class.create({
     getCurrentMaximumDelta: function(){
         return this.slider.maximum * (this.scrollLength() - this.offsetLength());
     },
+    getContainerOffset: function(element) {
+        var offset = element.positionedOffset();
+        while (element.getOffsetParent() != this.container)
+        {
+            element         = element.getOffsetParent();
+            offset[0]      += element.positionedOffset()[0];
+            offset[1]      += element.positionedOffset()[1];
+            offset.top     += element.positionedOffset().top;
+            offset.left    += element.positionedOffset().left;
+        }
+        return offset;
+    },
     getDeltaToElement: function(element){
+
         if (this.options.scroll_axis == 'vertical')
-            return this.slider.maximum * ((element.positionedOffset().top + (element.getHeight() / 2)) - (this.container.getHeight() / 2));
+            return this.slider.maximum * ((this.getContainerOffset(element).top + (element.getHeight() / 2)) - (this.container.getHeight() / 2));
         else
-            return this.slider.maximum * ((element.positionedOffset().left + (element.getWidth() / 2)) - (this.container.getWidth() / 2));
+            return this.slider.maximum * ((this.getContainerOffset(element).left + (element.getWidth() / 2)) - (this.container.getWidth() / 2));
     },
     scrollTo: function(y,animate){
         var precision = this.options.scroll_to_precision,
