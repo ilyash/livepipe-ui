@@ -28,16 +28,18 @@ Control.ScrollBar = Class.create({
             active_class_name: 'scrolling',
             apply_active_class_name_to: this.container,
             notification_timeout_length: 125,
-            handle_minimum_height: 25,
+            handle_minimum_length: 25,
             scroll_to_smoothing: 0.01,
             scroll_to_steps: 15,
+            scroll_to_precision: 100,
             proportional: true,
             custom_event: null,
             custom_event_handler: null,
+            scroll_axis: 'vertical',
             slider_options: {}
         },options || {});
         this.slider = new Control.Slider(this.handle,this.track,Object.extend({
-            axis: 'vertical',
+            axis: this.options.scroll_axis,
             onSlide: this.onChange.bind(this),
             onChange: this.onChange.bind(this)
         },this.options.slider_options));
@@ -63,6 +65,12 @@ Control.ScrollBar = Class.create({
             this.container.stopObserving(this.options.custom_event);
         }
     },
+    scrollLength: function(){
+        return (this.options.scroll_axis == 'vertical') ? this.container.scrollHeight : this.container.scrollWidth;
+    },
+    offsetLength: function(){
+        return (this.options.scroll_axis == 'vertical') ? this.container.offsetHeight : this.container.offsetWidth;
+    },
     enable: function(){
         this.enabled = true;
         this.container.observe('mouse:wheel',this.boundMouseWheelEvent);
@@ -86,15 +94,19 @@ Control.ScrollBar = Class.create({
         this.slider.setValue(0);
     },
     recalculateLayout: function(){
-        if(this.container.scrollHeight <= this.container.offsetHeight)
+        if(this.scrollLength() <= this.offsetLength())
             this.disable();
         else{
             this.enable();
             this.slider.trackLength = this.slider.maximumOffset() - this.slider.minimumOffset();
             if(this.options.proportional){
-                this.handle.style.height = Math.max(this.container.offsetHeight * (this.container.offsetHeight / this.container.scrollHeight),this.options.handle_minimum_height) + 'px';
-                this.slider.handleLength = this.handle.style.height.replace(/px/,'');
+                this.slider.handleLength = Math.max(this.offsetLength() * (this.offsetLength() / this.scrollLength()),this.options.handle_minimum_length);
+                if (this.options.scroll_axis == 'vertical')
+                    this.handle.style.height = this.slider.handleLength + 'px';
+                else
+                    this.handle.style.width = this.slider.handleLength + 'px';
             }
+            this.scrollBy(0);
         }
     },
     onWindowResize: function(){
@@ -109,7 +121,11 @@ Control.ScrollBar = Class.create({
         return false;
     },
     onChange: function(value){
-        this.container.scrollTop = Math.round(value / this.slider.maximum * (this.container.scrollHeight - this.container.offsetHeight));
+        var scroll_pos = Math.round(value / this.slider.maximum * (this.scrollLength() - this.offsetLength()));
+        if (this.options.scroll_axis == 'vertical')
+            this.container.scrollTop = scroll_pos;
+        else
+            this.container.scrollLeft = scroll_pos;
         if(this.notification_timeout)
             window.clearTimeout(this.notificationTimeout);
         this.notificationTimeout = window.setTimeout(function(){
@@ -117,13 +133,32 @@ Control.ScrollBar = Class.create({
         }.bind(this),this.options.notification_timeout_length);
     },
     getCurrentMaximumDelta: function(){
-        return this.slider.maximum * (this.container.scrollHeight - this.container.offsetHeight);
+        return this.slider.maximum * (this.scrollLength() - this.offsetLength());
+    },
+    getContainerOffset: function(element) {
+        var offset = element.positionedOffset();
+        while (element.getOffsetParent() != this.container)
+        {
+            element         = element.getOffsetParent();
+            offset[0]      += element.positionedOffset()[0];
+            offset[1]      += element.positionedOffset()[1];
+            offset.top     += element.positionedOffset().top;
+            offset.left    += element.positionedOffset().left;
+        }
+        return offset;
     },
     getDeltaToElement: function(element){
-        return this.slider.maximum * ((element.positionedOffset().top + (element.getHeight() / 2)) - (this.container.getHeight() / 2));
+
+        if (this.options.scroll_axis == 'vertical')
+            return this.slider.maximum * ((this.getContainerOffset(element).top + (element.getHeight() / 2)) - (this.container.getHeight() / 2));
+        else
+            return this.slider.maximum * ((this.getContainerOffset(element).left + (element.getWidth() / 2)) - (this.container.getWidth() / 2));
     },
     scrollTo: function(y,animate){
-        var current_maximum_delta = this.getCurrentMaximumDelta();
+        var precision = this.options.scroll_to_precision,
+            current_maximum_delta = this.getCurrentMaximumDelta();
+        if (precision == 'auto')
+            precision = Math.pow(10, Math.ceil(Math.log(current_maximum_delta)/Math.log(10)));
         if(y == 'top')
             y = 0;
         else if(y == 'bottom')
@@ -139,7 +174,7 @@ Control.ScrollBar = Class.create({
             var delta = (target_value - original_slider_value) * current_maximum_delta;
             if(animate){
                 this.auto_sliding_executer = new PeriodicalExecuter(function(){
-                    if(Math.round(this.slider.value * 100) / 100 < Math.round(target_value * 100) / 100 || Math.round(this.slider.value * 100) / 100 > Math.round(target_value * 100) / 100){
+                    if(Math.round(this.slider.value * precision) / precision < Math.round(target_value * precision) / precision || Math.round(this.slider.value * precision) / precision > Math.round(target_value * precision) / precision){
                         this.scrollBy(delta / this.options.scroll_to_steps);
                     }else{
                         this.auto_sliding_executer.stop();
