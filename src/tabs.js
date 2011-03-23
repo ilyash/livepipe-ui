@@ -22,12 +22,13 @@ Control.Tabs = Class.create({
         this.activeLink = false;
         this.containers = $H({});
         this.links = [];
-        Control.Tabs.instances.push(this);
         this.options = {
             beforeChange: Prototype.emptyFunction,
             afterChange: Prototype.emptyFunction,
             hover: false,
+            tracked: true,
             linkSelector: 'li a',
+            linkAttribute: 'href',
             setClassOnContainer: false,
             activeClassName: 'active',
             defaultTab: 'first',
@@ -37,12 +38,34 @@ Control.Tabs = Class.create({
             hideFunction: Element.hide
         };
         Object.extend(this.options,options || {});
+        if (this.options.tracked) {
+            Control.Tabs.instances.push(this);
+        }
+        var filterLinks;
+        switch (this.options.linkAttribute) {
+        case 'href':
+        case 'src':
+            filterLinks = function(link){
+                return (/^#/).test(link.getAttribute(this.options.linkAttribute).replace(
+                    window.location.href.split('#')[0],''));
+            };
+            break;
+
+        default:
+            if (typeof(this.options.linkAttribute) == 'function') {
+                filterLinks = this.options.linkAttribute;
+            }
+            else {
+                filterLinks = function(link) {
+                    return link.hasAttribute(this.options.linkAttribute);
+                };
+            }
+        }
+
         (typeof(this.options.linkSelector) == 'string' ? 
             $(tab_list_container).select(this.options.linkSelector) : 
             this.options.linkSelector($(tab_list_container))
-        ).findAll(function(link){
-            return (/^#/).exec((Prototype.Browser.WebKit ? decodeURIComponent(link.href) : link.href).replace(window.location.href.split('#')[0],''));
-        }).each(function(link){
+        ).findAll(filterLinks.bind(this)).each(function(link){
             this.addTab(link);
         }.bind(this));
         this.containers.values().each(Element.hide);
@@ -77,7 +100,22 @@ Control.Tabs = Class.create({
     },
     addTab: function(link){
         this.links.push(link);
-        link.key = link.getAttribute('href').replace(window.location.href.split('#')[0],'').split('#').last().replace(/#/,'');
+        
+        switch (this.options.linkAttribute) {
+        case 'href':
+        case 'src':
+            link.key = link.getAttribute(this.options.linkAttribute).replace(
+                window.location.href.split('#')[0],'').split('#').last().replace(/#/,'');
+            break;
+
+        default:
+            if (typeof(this.options.linkAttribute) == 'function') {
+                link.key = this.options.linkAttribute(link);
+            }
+            else {
+                link.key = link.getAttribute(this.options.linkAttribute);
+            }
+        }
         var container = $(link.key);
         if(!container) {
             throw "Control.Tabs: #" + link.key + " was not found on the page."; }
