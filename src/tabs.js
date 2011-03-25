@@ -31,6 +31,7 @@ Control.Tabs = Class.create({
             linkAttribute: 'href',
             setClassOnContainer: false,
             activeClassName: 'active',
+            disabledClassName: 'disabled',
             defaultTab: 'first',
             autoLinkExternal: true,
             targetRegExp: /#(.+)$/,
@@ -116,7 +117,7 @@ Control.Tabs = Class.create({
                 link.key = link.getAttribute(this.options.linkAttribute);
             }
         }
-        var container = $(link.key);
+        var container = this.options.tabs_container ? this.options.tabs_container.down('#'+link.key) : $(link.key);
         if(!container) {
             throw "Control.Tabs: #" + link.key + " was not found on the page."; }
         this.containers.set(link.key,container);
@@ -136,7 +137,7 @@ Control.Tabs = Class.create({
             }));
         }else if(typeof(link) == 'number'){
             this.setActiveTab(this.links[link]);
-        }else{
+        }else if(!(this.options.setClassOnContainer ? $(link.parentNode) : link).hasClassName(this.options.disabledClassName)){
             if(this.notify('beforeChange',this.activeContainer,this.containers.get(link.key)) === false) {
                 return; }
             if(this.activeContainer) {
@@ -149,6 +150,32 @@ Control.Tabs = Class.create({
             this.activeLink = link;
             this.options.showFunction(this.containers.get(link.key));
             this.notify('afterChange',this.containers.get(link.key));
+        }
+    },
+    disableTab: function (link) {
+        if(!link && typeof(link) == 'undefined') {
+            return; }
+        if(typeof(link) == 'string'){
+            this.disableTab(this.links.find(function(_link){
+                return _link.key == link;
+            }));
+        }else if(typeof(link) == 'number'){
+            this.disableTab(this.links[link]);
+        }else{
+            (this.options.setClassOnContainer ? $(link.parentNode) : link).addClassName(this.options.disabledClassName);
+        }
+    },
+    enableTab: function (link) {
+        if(!link && typeof(link) == 'undefined') {
+            return; }
+        if(typeof(link) == 'string'){
+            this.enableTab(this.links.find(function(_link){
+                return _link.key == link;
+            }));
+        }else if(typeof(link) == 'number'){
+            this.enableTab(this.links[link]);
+        }else{
+            (this.options.setClassOnContainer ? $(link.parentNode) : link).removeClassName(this.options.disabledClassName);
         }
     },
     next: function(){
