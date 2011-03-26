@@ -138,6 +138,8 @@ Control.Tabs = Class.create({
         }else if(typeof(link) == 'number'){
             this.setActiveTab(this.links[link]);
         }else if(!(this.options.setClassOnContainer ? $(link.parentNode) : link).hasClassName(this.options.disabledClassName)){
+            if(link == this.activeLink) {
+                return; }
             if(this.notify('beforeChange',this.activeContainer,this.containers.get(link.key)) === false) {
                 return; }
             if(this.activeContainer) {
@@ -162,6 +164,8 @@ Control.Tabs = Class.create({
         }else if(typeof(link) == 'number'){
             this.disableTab(this.links[link]);
         }else{
+            if ({'INPUT':true,'BUTTON':true,'SELECT':true,'TEXTAREA':true}[link.nodeName]) {
+                link.disabled = true; }
             (this.options.setClassOnContainer ? $(link.parentNode) : link).addClassName(this.options.disabledClassName);
         }
     },
@@ -175,6 +179,8 @@ Control.Tabs = Class.create({
         }else if(typeof(link) == 'number'){
             this.enableTab(this.links[link]);
         }else{
+            if ({'INPUT':true,'BUTTON':true,'SELECT':true,'TEXTAREA':true}[link.nodeName]) {
+                link.disabled = false; }
             (this.options.setClassOnContainer ? $(link.parentNode) : link).removeClassName(this.options.disabledClassName);
         }
     },
