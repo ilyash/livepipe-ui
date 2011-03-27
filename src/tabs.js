@@ -128,6 +128,19 @@ Control.Tabs = Class.create({
             return false;
         }.bind(this,link);
     },
+    getTab: function (link) {
+        if(!link && typeof(link) == 'undefined') {
+            return null; }
+        if(typeof(link) == 'string'){
+            return this.getTab(this.links.find(function(_link){
+                return _link.key == link;
+            }));
+        }else if(typeof(link) == 'number'){
+            return this.getTab(this.links[link]);
+        }else {
+            return this.containers.get(link.key);
+        }
+    },
     setActiveTab: function(link){
         if(!link && typeof(link) == 'undefined') {
             return; }
