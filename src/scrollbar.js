@@ -116,7 +116,8 @@ Control.ScrollBar = Class.create({
     onMouseWheel: function(event){
         if(this.auto_sliding_executer)
             this.auto_sliding_executer.stop();
-        this.slider.setValueBy(-(event.memo.delta / 20)); //put in math to account for the window height
+        // Move the content by 30 pixels each wheel event
+        this.slider.setValueBy(-(30 * event.memo.delta / (this.scrollLength()-this.slider.trackLength)));
         event.stop();
         return false;
     },
