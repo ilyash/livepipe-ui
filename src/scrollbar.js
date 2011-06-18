@@ -36,6 +36,17 @@ Control.ScrollBar = Class.create({
             custom_event: null,
             custom_event_handler: null,
             scroll_axis: 'vertical',
+            /**
+             * If this value is larger than 0 (e.g. 50), one mouse wheel event will scroll the page
+             * by the given number of pixels (default behaviour in any program). If it is lower than 0,
+             * the scrollbar's default behaviour will be used (scrolls down 1/20 of the page, no matter
+             * how long it is). Initialization with e.g.:
+             * new Control.ScrollBar(
+                    document.getElementById('scrollbar_content'),
+                    document.getElementById('scrollbar_track'),
+                    { fixed_scroll_distance: 50 });
+             */
+            fixed_scroll_distance: -1,
             slider_options: {}
         },options || {});
         this.slider = new Control.Slider(this.handle,this.track,Object.extend({
@@ -114,10 +125,16 @@ Control.ScrollBar = Class.create({
         this.scrollBy(0);
     },
     onMouseWheel: function(event){
-        if(this.auto_sliding_executer)
+        if(this.auto_sliding_executer) {
             this.auto_sliding_executer.stop();
-        // Move the content by 30 pixels each wheel event
-        this.slider.setValueBy(-(30 * event.memo.delta / (this.scrollLength()-this.slider.trackLength)));
+        }
+        if (this.options.fixed_scroll_distance > 0) {
+            // Move the content by the given number of pixels each wheel event
+            this.slider.setValueBy(-(this.options.fixed_scroll_distance * event.memo.delta / (this.scrollLength()-this.slider.trackLength)));
+        } else {
+            // Move the content by 1/20 of the page
+            this.slider.setValueBy(-(event.memo.delta / 20));
+        }
         event.stop();
         return false;
     },
