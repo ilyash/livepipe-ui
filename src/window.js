@@ -674,19 +674,23 @@ Control.Overlay = {
     loaded: false,
     container: false,
     lastOpacity: 0,
-    styles: {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 9998
+    getStyles: function() {
+        return {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: Control.Window.baseZIndex - 1
+        };
     },
-    ieStyles: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        zIndex: 9998
+    getIeStyles: function() {
+        return {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            zIndex: Control.Window.baseZIndex - 1
+        };
     },
     effects: {
         fade: false,
@@ -701,12 +705,12 @@ Control.Overlay = {
         });
         $(document.body).insert(Control.Overlay.container);
         if(Prototype.Browser.IE){
-            Control.Overlay.container.setStyle(Control.Overlay.ieStyles);
+            Control.Overlay.container.setStyle(Control.Overlay.getIeStyles());
             Event.observe(window,'scroll',Control.Overlay.positionOverlay);
             Event.observe(window,'resize',Control.Overlay.positionOverlay);
             Control.Overlay.observe('beforeShow',Control.Overlay.positionOverlay);
         }else
-            Control.Overlay.container.setStyle(Control.Overlay.styles);
+            Control.Overlay.container.setStyle(Control.Overlay.getStyles());
         Control.Overlay.iFrameShim = new IframeShim();
         Control.Overlay.iFrameShim.hide();
         Event.observe(window,'resize',Control.Overlay.positionIFrameShim);
