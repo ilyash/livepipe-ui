@@ -5,37 +5,31 @@
  * @license MIT
  * @url http://livepipe.net/controls/hotkey/
  * @attribution http://www.quirksmode.org/js/cookies.html
+ * Modified not to use Object.Event
+ * Modified not to use Prototype - Ilya Sher, 2012
  */
 
-/*global document, Prototype, $A */
-
-if(typeof(Prototype) == "undefined") {
-  throw "Cookie requires Prototype to be loaded."; }
-if(typeof(Object.Event) == "undefined") {
-  throw "Cookie requires Object.Event to be loaded."; }
+/*global document */
 
 var Cookie = {
-  build: function() {
-    return $A(arguments).compact().join("; ");
-  },
   secondsFromNow: function(seconds) {
     var d = new Date();
     d.setTime(d.getTime() + (seconds * 1000));
     return d.toGMTString();
   },
   set: function(name,value,seconds){
-    Cookie.notify('set',name,value);
-    var expiry = seconds ? 'expires=' + Cookie.secondsFromNow(seconds) : null;
-    document.cookie = Cookie.build(name + "=" + value, expiry, "path=/");
+    var t = [name + "=" + value];
+    if(seconds) {
+      t.push('expires=' + Cookie.secondsFromNow(seconds));
+    }
+    t.push("path=/");
+    document.cookie = t.join("; ");
   },
   get: function(name){
-    Cookie.notify('get',name);
     var valueMatch = new RegExp(name + "=([^;]+)").exec(document.cookie);
     return valueMatch ? valueMatch[1] : null;
   },
   unset: function(name){
-    Cookie.notify('unset',name);
     Cookie.set(name,'',-1);
   }
 };
-Object.Event.extend(Cookie);
